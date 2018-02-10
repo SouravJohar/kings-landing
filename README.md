@@ -2,8 +2,8 @@
 Our software engineering project :/
  
  
- TODO
+TODO
  
-*Make a dashboard page
-*Hook backend with a database
-*Make a kick-ass home page
+ *Make a dashboard page
+ *Hook backend with a database
+ *Make a kick-ass home page
