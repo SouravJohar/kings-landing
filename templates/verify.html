@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Sign up</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="../static/css/signup_util.css">
+	<link rel="stylesheet" type="text/css" href="../static/css/signup.css">
+
+</head>
+<body style="background-color: #999999;">
+
+	<div class="limiter">
+		<div class="container-login100">
+			<div class="login100-more" style="background-image: url('../static/images/signup_airplane.jpg');"></div>
+
+			<div class="wrap-login100 p-l-50 p-r-50 p-t-72 p-b-50">
+				<form class="login100-form validate-form" method="post">
+					<span class="login100-form-title p-b-59">
+						We have sent an OTP to {{mob}}
+					</span>
+					{% if otp %}
+						<p class="error"><strong>Error:</strong> {{ otp }}</p>
+					{% endif %}
+
+					<div class="wrap-input100 validate-input" data-validate="Name is required">
+						<span class="label-input100">OTP</span>
+						<input class="input100" type="number" name="otp" placeholder="OTP">
+						<span class="focus-input100"></span>
+					</div>
+
+          <div class="wrap-login100-form-btn">
+            <div class="login100-form-bgbtn"></div>
+            <button class="login100-form-btn" type="submit">
+              Verify
+            </button>
+          </div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+
+<!--===============================================================================================-->
+	<script src="../static/js/jquery-3.2.1.min.js"></script>
+	<script src="../static/js/signup.js"></script>
+
+</body>
+</html>
