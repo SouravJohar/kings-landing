@@ -9,4 +9,4 @@ TODO
  * Next module : Profile management
  
  * to the database manager:
-  * no work as of now
+     * no work as of now
