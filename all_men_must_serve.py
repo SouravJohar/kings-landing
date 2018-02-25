@@ -22,7 +22,10 @@ def home():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", msg="Hello, " + session["user"] + "!")
+    if session["logged_in"]:
+        return render_template("dashboard.html", msg="Hello, " + session["user"] + "!")
+    else:
+        return redirect(url_for("login"))
 
 
 @app.route('/otp', methods=["GET", "POST"])
@@ -94,8 +97,8 @@ def verify():
     else:
         client_otp = int(request.form["otp"])
         if client_otp == session["server_otp"]:
-            c.execute("insert into user values (?, ?, ?, ?, ?, ?, ?, ?)",
-                      (session["temp"][0], session["temp"][2], "None", -1, "None", session["temp"][1], "None", "None"))
+            c.execute("insert into user values (?, ?, ?, ?, ?, ?, ?)",
+                      (session["temp"][0], session["temp"][2], "None", "-1", session["temp"][1], "None", "None"))
             c.execute("insert into login values (?, ?)", (session["temp"][2], session["temp"][3]))
             conn.commit()
 
