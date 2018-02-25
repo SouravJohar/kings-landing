@@ -33,7 +33,7 @@ def verifylogin():
     if request.method == "GET":
         server_otp = int(random() * 10000)
         session["server_otp"] = server_otp
-        print "boooo", session["temp_email"]
+        #print "boooo", session["temp_email"]
         c.execute("select ph_no from user where email = '{}'".format(session["temp_email"]))
         user_ph = c.fetchone()[0]
         URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=2&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
@@ -59,11 +59,11 @@ def login():
     else:
         okay = False
         email = request.form['email']
-        print email
+        #print (email)
         password = request.form['pass']
         c.execute("select email from login where email = '{}'".format(email))
         emails_db = c.fetchall()
-        print emails_db
+        #print (emails_db)
         emails_db = [email_db[0] for email_db in emails_db]
         if email in emails_db:
             c.execute("select password from login where email = '{}';".format(email))
@@ -73,13 +73,13 @@ def login():
             else:
                 msg = "Invalid Credentials!"
         else:
-            print email
-            print emails_db
+            #print email
+            #print emails_db
             okay = False
             msg = "No such user exists, sign up."
         if okay:
             session["temp_email"] = email
-            print "lololol", session["temp_email"]
+            print ("lololol", session["temp_email"])
             return redirect(url_for("verifylogin"))
         else:
             return render_template('login.html', msg=msg)
