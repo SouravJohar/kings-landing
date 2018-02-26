@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, session, f
 from random import random
 import sqlite3 as db
 import requests
-
+from functools import wraps
 
 # TODO
 
@@ -15,30 +15,54 @@ conn = db.connect('database/kingsbase.db')
 c = conn.cursor()
 
 
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            print "poop"
+            if session['logged_in']:
+                print "poop indeed"
+                return f(*args, **kwargs)
+        else:
+            return redirect(url_for('login'))
+    return wrap
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    try:
+        print session["user"]
+    except:
+        print "fail"
+    session.pop('logged_in', None)
+    session.pop('user', None)
+    print "after log out", session
+    return redirect(url_for('login'))
+
+
 @app.route('/')
 def home():
     return render_template("home.html")
 
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
-    if session["logged_in"]:
-        return render_template("dashboard.html", msg="Hello, " + session["user"] + "!")
-    else:
-        return redirect(url_for("login"))
+    return render_template("dashboard.html", msg="Hello, " + session["user"] + "!")
 
 
 @app.route('/otp', methods=["GET", "POST"])
 def verifylogin():
     if request.method == "GET":
-        server_otp = int(random() * 10000)
+        server_otp = 1111  # int(random() * 10000)
         session["server_otp"] = server_otp
-        #print "boooo", session["temp_email"]
+        print "boooo", session["temp_email"]
         c.execute("select ph_no from user where email = '{}'".format(session["temp_email"]))
         user_ph = c.fetchone()[0]
         URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=2&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
             KEY, user_ph, "Your OTP from Kings Landing is " + str(server_otp))
-        requests.get(URL)
+        # requests.get(URL)
         return render_template("loginverify.html", mob=user_ph)
     else:
         client_otp = int(request.form["otp"])
@@ -59,11 +83,11 @@ def login():
     else:
         okay = False
         email = request.form['email']
-        #print (email)
+        print email
         password = request.form['pass']
         c.execute("select email from login where email = '{}'".format(email))
         emails_db = c.fetchall()
-        #print (emails_db)
+        print emails_db
         emails_db = [email_db[0] for email_db in emails_db]
         if email in emails_db:
             c.execute("select password from login where email = '{}';".format(email))
@@ -73,13 +97,13 @@ def login():
             else:
                 msg = "Invalid Credentials!"
         else:
-            #print email
-            #print emails_db
+            print email
+            print emails_db
             okay = False
             msg = "No such user exists, sign up."
         if okay:
             session["temp_email"] = email
-            print ("lololol", session["temp_email"])
+            print "lololol", session["temp_email"]
             return redirect(url_for("verifylogin"))
         else:
             return render_template('login.html', msg=msg)
