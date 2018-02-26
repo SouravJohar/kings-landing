@@ -37,7 +37,7 @@ def logout():
         print "fail"
     session.pop('logged_in', None)
     session.pop('user', None)
-    print "after log out", session
+    # print "after log out", session
     return redirect(url_for('login'))
 
 
@@ -57,7 +57,7 @@ def verifylogin():
     if request.method == "GET":
         server_otp = 1111  # int(random() * 10000)
         session["server_otp"] = server_otp
-        print "boooo", session["temp_email"]
+        # print "boooo", session["temp_email"]
         c.execute("select ph_no from user where email = '{}'".format(session["temp_email"]))
         user_ph = c.fetchone()[0]
         URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=2&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
@@ -97,8 +97,8 @@ def login():
             else:
                 msg = "Invalid Credentials!"
         else:
-            print email
-            print emails_db
+            # print email
+            # print emails_db
             okay = False
             msg = "No such user exists, sign up."
         if okay:
