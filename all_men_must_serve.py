@@ -19,9 +19,9 @@ def login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
         if 'logged_in' in session:
-            print "poop"
+            # print "poop"
             if session['logged_in']:
-                print "poop indeed"
+                # print "poop indeed"
                 return f(*args, **kwargs)
         else:
             return redirect(url_for('login'))
@@ -165,6 +165,23 @@ def signup():
             return redirect(url_for("verify"))
         else:
             return render_template("signup.html", msg=msg)
+
+
+@app.route('/profile', methods=["GET", "POST"])
+@login_required
+def profile():
+    if request.method == "GET":
+        c.execute("select * from user where email = '{}'".format(session["user"]))
+        name, email, address, dob, ph_no, state, country = c.fetchone()
+        if dob == "-1":
+            dob = None
+        if state == "None":
+            state = None
+        if country == "None":
+            country = None
+        if address == "None":
+            address = None
+        return render_template("profile.html", name=name, email=email, phone=ph_no, dob=dob, address=address, country=country, state=state)
 
 
 app.run()
