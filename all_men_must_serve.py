@@ -9,10 +9,17 @@ from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "the_debt_is_payed"
-KEY = 'qp9ezhmfH0yRtBmvkJhIPw'
+
 
 conn = db.connect('database/kingsbase.db')
 c = conn.cursor()
+
+
+def sendOTP(otp, to, fake=False):
+    if not fake:
+        URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=2&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
+            KEY, to, "Your OTP from Kings Landing is " + str(otp))
+        requests.get(URL)
 
 
 def login_required(f):
@@ -31,13 +38,8 @@ def login_required(f):
 @app.route('/logout')
 @login_required
 def logout():
-    try:
-        print session["user"]
-    except:
-        print "fail"
     session.pop('logged_in', None)
     session.pop('user', None)
-    # print "after log out", session
     return redirect(url_for('login'))
 
 
@@ -49,7 +51,11 @@ def home():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html", msg="Hello, " + session["user"] + "!")
+    user_email = session["user"]
+    c.execute("select name from user where email = '{}'".format(user_email))
+    name = c.fetchone()[0]
+    fname = name.split()[0]
+    return render_template("dashboard.html", user=fname)
 
 
 @app.route('/otp', methods=["GET", "POST"])
@@ -60,14 +66,11 @@ def verifylogin():
         # print "boooo", session["temp_email"]
         c.execute("select ph_no from user where email = '{}'".format(session["temp_email"]))
         user_ph = c.fetchone()[0]
-        URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=2&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
-            KEY, user_ph, "Your OTP from Kings Landing is " + str(server_otp))
-        # requests.get(URL)
+        sendOTP(to=user_ph, otp=server_otp, fake=True)
         return render_template("loginverify.html", mob=user_ph)
     else:
         client_otp = int(request.form["otp"])
         if client_otp == session["server_otp"]:
-
             session["logged_in"] = True
             session["user"] = session["temp_email"]
             session["temp_email"] = None
@@ -83,11 +86,11 @@ def login():
     else:
         okay = False
         email = request.form['email']
-        print email
+        # print email
         password = request.form['pass']
         c.execute("select email from login where email = '{}'".format(email))
         emails_db = c.fetchall()
-        print emails_db
+        # print emails_db
         emails_db = [email_db[0] for email_db in emails_db]
         if email in emails_db:
             c.execute("select password from login where email = '{}';".format(email))
@@ -103,7 +106,7 @@ def login():
             msg = "No such user exists, sign up."
         if okay:
             session["temp_email"] = email
-            print "lololol", session["temp_email"]
+            # print "lololol", session["temp_email"]
             return redirect(url_for("verifylogin"))
         else:
             return render_template('login.html', msg=msg)
@@ -114,9 +117,8 @@ def verify():
     if request.method == "GET":
         server_otp = int(random() * 10000)
         session["server_otp"] = server_otp
-        URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=2&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
-            KEY, session['temp'][1], "Your OTP from Kings Landing is " + str(server_otp))
-        requests.get(URL)
+        user_ph = session['temp'][1]
+        sendOTP(to=user_ph, otp=server_otp)
         return render_template("verify.html", mob=session["temp"][1])
     else:
         client_otp = int(request.form["otp"])
@@ -125,7 +127,6 @@ def verify():
                       (session["temp"][0], session["temp"][2], "None", "-1", session["temp"][1], "None", "None"))
             c.execute("insert into login values (?, ?)", (session["temp"][2], session["temp"][3]))
             conn.commit()
-
             session["logged_in"] = True
             session["user"] = session["temp"][2]
             session['temp'] = None
@@ -182,6 +183,47 @@ def profile():
         if address == "None":
             address = None
         return render_template("profile.html", name=name, email=email, phone=ph_no, dob=dob, address=address, country=country, state=state)
+
+
+@app.route("/upcoming")
+@login_required
+def upcoming():
+    journeys = [
+        {
+            "pnr": "PXZ33",
+            "date": "12-02-2019",
+            "pax": 3,
+            "no": 1,
+            "to": "Jaipur",
+            "from": "Trichy",
+            "from_time": "2:20",
+            "to_time": "4:50",
+            "journey_time": "2h 30m",
+            "web_checkin_available": True,
+            "passengers": ["Mr. Raj", "Mr. Sourav Johar", "Mr. Prakash"],
+            "seat_type": "Economy",
+            "fnum":"KL213"
+
+        },
+        {
+            "pnr": "PXZ09",
+            "date": "13-02-2019",
+            "pax": 3,
+            "no": 2,
+            "to": "Pune",
+            "from": "Trichy",
+            "from_time": "2:20",
+            "to_time": "4:50",
+            "journey_time": "2h 30m",
+            "web_checkin_available": False,
+            "passengers": ["Mr. Raj", "Mr. Sourav Johar", "Mr. Prakash"],
+            "seat_type": "Economy",
+            "fnum":"KL013",
+            "already_checked_in": True
+
+        }
+    ]
+    return render_template("upcoming.html", journeys=journeys)
 
 
 app.run()
