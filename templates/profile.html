@@ -54,7 +54,7 @@
 
 					{% if dob %}
 					<div class="wrap-input100 validate-input">
-						<strong>Age</strong>: {{dob}}
+						<strong>Date of Birth</strong>: {{dob}}
 					</div>
 					{% endif %}
 
@@ -67,7 +67,13 @@
 						</div>
 					</div>
 
-				</form>
+</form>
+{% if aadhar %}
+
+		<a href= "/viewaadhar">View Aadhar Details </a>
+				
+		{% endif %}
+
 
 			</div>
 			<img src = "../static/images/profile.png" width = "20%" style="margin-left : 15%" />
