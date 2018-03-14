@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Upcoming journyes</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+  <script>
+  function toggle() {
+  $('.pls').click(function(){
+  var id_x = $(this).attr('id');
+  var id = document.getElementById(id_x)
+  var id2 = document.getElementById(id_x.slice(1))
+  console.log(id_x)
+  console.log(id2.id)
+  if (id.innerHTML == "More")
+    id.innerHTML = "Less";
+  else
+    id.innerHTML = "More";
+  if (id2.style.display === 'none')
+    id2.style.display = 'block';
+  else {
+    id2.style.display = 'none';
+  }
+
+});
+}
+  </script>
+
+<div class="container">
+  <br>
+  <div class="jumbotron jumbotron-fluid">
+    <h1 class="display-3" style="padding-left:2%">Upcoming Journeys</h1>
+
+    <hr class="my-4" style="padding-left:2%">
+    <p class="lead" style="padding-left:2%">You can now select your preferred seats anytime after booking your flight, by checking in below.</p>
+
+</div>
+  <br>
+
+
+  {% for journey in journeys %}
+  <br>
+  <br>
+
+  <div class="row">
+    <div class="col-sm-4">
+      <strong>Journey date : </strong>{{journey.date}}
+    </div>
+    <div class="col-sm-4">
+      <strong>Number of Passengers: </strong>{{journey.pax}}
+    </div>
+    <div class="col-sm-4">
+      <strong>PNR: </strong>{{journey.pnr}}
+    </div>
+  </div>
+  <div class="card bg-light text-dark" style="border-radius:5px;box-shadow: 0 3px 6px rgba(0,0,0,0.06), 0 3px 6px rgba(0,0,0, 0.1);">
+    <div class="row card-body" style="padding:1%">
+      <div class="col-sm-1">
+      <img src="../static/images/logo2_burned.png" style="height:65px"/>
+    </div>
+    <div class="col-sm-3">
+      <br>
+      <p>{{journey.from}}, JAA
+        <br>
+        <strong> {{journey.from_time}} </strong></p>
+    </div>
+    <div class="col-sm-3">
+      <br>
+      <p>{{journey.journey_time}}</p>
+    </div>
+    <div class="col-sm-3">
+      <br>
+      <p>{{journey.to}}, MAS
+        <br>
+        <strong> {{journey.to_time}} </strong></p>
+    </div>
+    {% if journey.web_checkin_available %}
+    <div class="col-sm-2">
+      <p>Select your seats</p>
+      {% set payload = journey %}
+
+      <a href = "/bookseats{{payload}}" role="button" class="btn btn-success">Web check-in</a>
+    </div>
+    {% endif %}
+    {% if journey.already_checked_in %}
+    <div class="col-sm-2">
+      <p>Already checked-in!</p>
+      <a href="viewseats/{{payload}}" role="button" class="btn btn-info">View Seats</a>
+    </div>
+    {% endif %}
+
+    <a href="#" class = "pls" id = "vmore{{journey.no}}" style = "padding-left:2%; color:grey !important" onclick="toggle()">More</a>
+    <div id="more{{journey.no}}" style = "display:none;margin-left:22%">
+      <br>
+      <div class="container">
+      <div class="row">
+        <div class="col-sm-4">
+      <strong>Passengers</strong>
+      {% for passenger in journey.passengers %}
+      <br>
+      {{passenger}}
+      {% endfor %}
+    </div>
+      <div class="col-sm-4">
+      <strong>Flight No. : </strong>{{journey.fnum}}
+    </div>
+    <div class = "col-sm-4">
+      <strong>Seat type: </strong>{{journey.seat_type}}
+    </div>
+  </div>
+  </div>
+</div>
+    </div>
+
+    </div>
+
+  {% endfor %}
+
+</div>
+
+</body>
+</html>
