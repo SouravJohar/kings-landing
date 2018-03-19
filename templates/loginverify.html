@@ -9,7 +9,12 @@
 	<link rel="stylesheet" type="text/css" href="../static/css/login.css">
 
 </head>
-<body>
+<SCRIPT type="text/javascript">
+	window.history.forward();
+	function noBack() { window.history.forward(); }
+</SCRIPT>
+<body onload="noBack();"
+	onpageshow="if (event.persisted) noBack();" onunload="">
 
 	<div class="limiter">
 		<div class="container-login100">
