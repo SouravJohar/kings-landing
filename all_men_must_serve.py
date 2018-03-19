@@ -6,16 +6,16 @@ import requests
 from functools import wraps
 import os
 
-# TODO
-
 
 app = Flask(__name__)
+
 app.secret_key = "the_debt_is_payed"
-
-
 app.config['UPLOAD_FOLDER'] = 'static/aadhar'
+
 conn = db.connect('database/kingsbase.db')
 c = conn.cursor()
+
+KEY = 'qp9ezhmfH0yRtBmvkJhIPw'
 
 
 def sendOTP(otp, to, fake=False):
@@ -29,9 +29,7 @@ def login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
         if 'logged_in' in session:
-            # print "poop"
             if session['logged_in']:
-                # print "poop indeed"
                 return f(*args, **kwargs)
         else:
             return redirect(url_for('login'))
@@ -66,7 +64,6 @@ def verifylogin():
     if request.method == "GET":
         server_otp = 1111  # int(random() * 10000)
         session["server_otp"] = server_otp
-        # print "boooo", session["temp_email"]
         c.execute("select ph_no from user where email = '{}'".format(session["temp_email"]))
         user_ph = c.fetchone()[0]
         sendOTP(to=user_ph, otp=server_otp, fake=True)
@@ -89,11 +86,9 @@ def login():
     else:
         okay = False
         email = request.form['email']
-        # print email
         password = request.form['pass']
         c.execute("select email from login where email = '{}'".format(email))
         emails_db = c.fetchall()
-        # print emails_db
         emails_db = [email_db[0] for email_db in emails_db]
         if email in emails_db:
             c.execute("select password from login where email = '{}';".format(email))
@@ -103,13 +98,10 @@ def login():
             else:
                 msg = "Invalid Credentials!"
         else:
-            # print email
-            # print emails_db
             okay = False
             msg = "No such user exists, sign up."
         if okay:
             session["temp_email"] = email
-            # print "lololol", session["temp_email"]
             return redirect(url_for("verifylogin"))
         else:
             return render_template('login.html', msg=msg)
@@ -186,16 +178,11 @@ def profile():
         if address == "None":
             address = None
         c.execute("select * from aadhar where email = '{}'".format(session["user"]))
-        aadharquery=c.fetchall()
-        aadhar="123"
-        if len(aadharquery)==0:
-            print("NOne aadhar")
-            aadhar=None
-        else:
-            aadhar="123"
-
-
-        return render_template("profile.html", name=name, email=email, phone=ph_no, dob=dob, address=address, country=country, state=state,aadhar=aadhar)
+        aadharquery = c.fetchall()
+        aadhar = True
+        if len(aadharquery) == 0:
+            aadhar = None
+        return render_template("profile.html", name=name, email=email, phone=ph_no, dob=dob, address=address, country=country, state=state, aadhar=aadhar)
     else:
         return redirect(url_for("editprofile"))
 
@@ -244,19 +231,15 @@ def upcoming():
 @app.route('/editprofile', methods=["GET", "POST"])
 @login_required
 def editprofile():
-
     if request.method == "GET":
         c.execute("select * from aadhar where email = '{}'".format(session["user"]))
-        aadharquery=c.fetchall()
-        aadhar="132"
-        aadharid=""
-        if(len(aadharquery)!=0):
-            aadharid,email,aa=aadharquery[0]
-            aadhar=None
-        else:
-            # aadharid,email,aa=aadharquery
-            print("up here jackass")
-        User=session["user"]
+        aadharquery = c.fetchall()
+        aadharid = ""
+        aadhar = True
+        if len(aadharquery) != 0:
+            aadharid, email, aa = aadharquery[0]
+            aadhar = None
+        User = session["user"]
         c.execute("select * from user where email = '{}'".format(User))
         name, email, address, dob, ph_no, state, country = c.fetchone()
         if dob == "-1":
@@ -267,82 +250,49 @@ def editprofile():
             country = ""
         if address == "None":
             address = ""
-        print address,name, email , dob, state,aadharid
-
-        return render_template("editprofile.html",aadharid=aadharid, aadhar=aadhar,name=name, email=email, phonenumber=ph_no, dob=dob, address=str(address), country=country, state=state)
+        return render_template("editprofile.html", aadharid=aadharid, aadhar=aadhar, name=name, email=email, phonenumber=ph_no, dob=dob, address=str(address), country=country, state=state)
     else:
         if request.method == 'POST':
-        # check if the post request has the file part
             c.execute("select * from aadhar where email = '{}'".format(session["user"]))
-            aadharquery=c.fetchall()
-
-            aadhar="132"
-            if(len (aadharquery)==0):
-                print "here i am "
+            aadharquery = c.fetchall()
+            if(len(aadharquery) == 0):
                 if 'file' not in request.files:
-                    flash('No Aadhar pic attached')
-                    print("no files fucker!")
+                    flash('No Aadhar picture attached')
                     return redirect(request.url)
                 file = request.files['file']
-                # if user does not select file, browser also
-                # submit a empty part without filename
                 if file.filename == '':
-                    print("no file name fucker")
-                    flash('No selected file')
+                    flash('No picture attached.')
                     return redirect(request.url)
                 if file:
-
-                    user=session["user"][:-4]+".jpg"
-                    filename = secure_filename(session["user"][:-4]+".jpg")
-                    print user
-                    print filename
+                    user = session["user"][:-4] + ".jpg"
+                    filename = secure_filename(session["user"][:-4] + ".jpg")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    aadharid=request.form["aadharid"]
-
+                    aadharid = request.form["aadharid"]
                     c.execute("insert into aadhar values (?, ?, ?)",
-                              ( aadharid, session["user"], "yes"))
+                              (aadharid, session["user"], "yes"))
                     conn.commit()
-            else:
-                aadhar=None
-        # file=request.files["aadharpic"]
-        # bfilename = photos.save(request.files['aadharpic'])
-        # filename = secure_filename(file.filename)
-        # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        # print(pic )
-        print("pic uploaded I guess")
-        print "herer"
-        User=session["user"]
+        User = session["user"]
         name = request.form["name"]
-        print str(name) + " name "
         phone = request.form["phonenumber"]
-        # email = request.form["email"]
-        print str(phone) + " ph "
-        # print str(address) + " name "
         address = request.form["address"]
-        print str(address) + " ad "
         dob = request.form["dob"]
-        print dob
         country = request.form["country"]
         state = request.form["state"]
-        print name
-        print phone
+        aadharid = request.form["aadharid"]
+        c.execute("update aadhar set aadharid = ? where email = ?", (aadharid, User))
         c.execute("""UPDATE user SET name = ? ,ph_no = ?,address= ?,dob = ? ,state= ?,country= ? WHERE email= ? """,
-  (name,phone,address,dob,state,country,User))
+                  (name, phone, address, dob, state, country, User))
         conn.commit()
-        print "reached"
-        # return render_template("editprofile.html", name=name, email=email, phonenumber=phone, dob=dob, address=address, country=country, state=state)
         return redirect(url_for("profile"))
+
 
 @app.route('/viewaadhar', methods=["GET", "POST"])
 def viewaadhar():
     if request.method == "GET":
-        user=session["user"][:-4]
-        filename = secure_filename(session["user"][:-4]+".jpg")
-        # print user[:-3]
-        imgpath='../static/aadhar/'+filename
-        print imgpath
-        return render_template('viewaadhar.html',imgpath=imgpath)
+        user = session["user"][:-4]
+        filename = secure_filename(session["user"][:-4] + ".jpg")
+        imgpath = '../static/aadhar/' + filename
+        return render_template('viewaadhar.html', imgpath=imgpath)
 
 
-
-app.run()
+app.run("0.0.0.0")
