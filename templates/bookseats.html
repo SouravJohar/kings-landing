@@ -1,0 +1,327 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Seat Selection</title>
+	<link href="http://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" type="text/css" href="../static/css/jquery.seat-charts.css">
+	<style>
+		body {
+			font-family: 'Roboto', sans-serif;
+			background-color: #fafafa;
+		}
+
+		a {
+			color: #b71a4c;
+		}
+
+		.front-indicator {
+			width: 145px;
+			margin: 5px 32px 15px 32px;
+			background-color: #f6f6f6;
+			color: #adadad;
+			text-align: center;
+			padding: 3px;
+			border-radius: 5px;
+		}
+
+		.wrapper {
+			width: 100%;
+			text-align: center;
+			margin-top: 150px;
+		}
+
+		.container {
+			margin: 0 auto;
+			width: 500px;
+			text-align: left;
+			margin-left: 35%;
+		}
+
+		.booking-details {
+			float: right;
+			text-align: right;
+			width: 200px;
+			margin-right: 10% font-size: 12px;
+			height: 450px;
+			margin-right: 10%;
+		}
+
+		.booking-details h2 {
+			margin: 25px 0 20px 0;
+			font-size: 17px;
+		}
+
+		.booking-details h3 {
+			margin: 5px 5px 0 0;
+			font-size: 14px;
+		}
+
+		div.seatCharts-cell {
+			color: #182C4E;
+			height: 25px;
+			width: 25px;
+			line-height: 25px;
+
+		}
+
+		div.seatCharts-seat {
+			color: #FFFFFF;
+			cursor: pointer;
+		}
+
+		div.seatCharts-row {
+			height: 35px;
+		}
+
+		div.seatCharts-seat.available {
+			background-color: #B9DEA0;
+
+		}
+
+		div.seatCharts-seat.available.first-class {
+			/* 	background: url(vip.png); */
+			background-color: #3a78c3;
+		}
+
+		div.seatCharts-seat.available.economy-class-con{
+			/* 	background: url(vip.png); */
+			background-color: #20a1ad;
+		}
+
+		div.seatCharts-seat.available.economy-class{
+			/* 	background: url(vip.png); */
+			background-color: #76B474;
+		}
+
+
+		div.seatCharts-seat.focused {
+			background-color: #e59ced;
+		}
+
+		div.seatCharts-seat.selected {
+			background-color: #9b21a8;
+		}
+
+		div.seatCharts-seat.unavailable {
+			background-color: #472B34;
+		}
+
+		div.seatCharts-container {
+			border-right: 1px dotted #adadad;
+			width: 350px;
+			padding: 20px;
+			float: left;
+			margin-left: -40%;
+		}
+
+
+		div.seatCharts-legend {
+			padding-left: 0px;
+			position: relative;
+			bottom: 16px;
+			margin-top: 20%;
+		}
+
+
+		ul.seatCharts-legendList {
+			padding-left: 0px;
+		}
+
+		span.seatCharts-legendDescription {
+			margin-left: 5px;
+			line-height: 30px;
+			font-size: 15px;
+		}
+
+		.checkout-button {
+			display: block;
+			margin: 10px 0;
+			font-size: 16px;
+			padding:3%;
+      border-radius: 7px;
+      border:1px solid white;
+			background: #49c698;
+			color:white;
+		}
+
+		#selected-seats {
+			max-height: 90px;
+			overflow-y: scroll;
+			overflow-x: none;
+			width: 170px;
+		}
+		.ticketinfo{
+			margin-left:30%;
+			border-radius:5px;
+			box-shadow: 0 3px 6px rgba(0,0,0,0.06), 0 3px 6px rgba(0,0,0, 0.1);
+			padding: 1%;
+			margin-bottom: 5%;
+			background: #e5e6e8;
+
+
+		}
+	</style>
+</head>
+
+<body>
+	<div id="jquery-script-menu">
+		<h1 style="margin-left:5%; margin-top:-0.52%"><img style="width:70px;" src="../static/images/logo2_burned.png"/>Select your seats</h1>
+	</div>
+
+	<script>
+		var pax = {{payload['pax']}};
+
+		function pcheck() {
+			var people = parseInt(document.getElementById("counter").innerHTML)
+			if (people < pax) {
+				alert("Warning. You have not selected enough seats.")
+				return false;
+			} else {
+
+				return true;
+			}
+		}
+	</script>
+
+	<form method="POST">
+		<input type="hidden" id="seats" name="seats" value="">
+		<input type="hidden" id="cost" name="cost" value=0>
+
+		<div class="wrapper">
+			<div class="container ticketinfo">
+				{% set pnr = payload['pnr'] %} {% set doj = payload['date'] %} {% set passengers = payload['passengers'] %} {% set seat_type = payload['seat_type'] %} {% set flight_no = payload['fnum'] %} {% set from = payload['from'] %} {% set to = payload['to'] %}
+
+				<p><strong>PNR</strong> : {{pnr}}</p>
+				<p>From <strong>{{from}}</strong> to <strong>{{to}}</strong> on <strong>{{doj}}</strong>
+					<p><strong>Flight Number</strong>: {{flight_no }} <strong>Seat Type</strong>: {{seat_type}}</p>
+					<p>
+						<strong>Passengers</strong>: {% for passenger in passengers %}
+						<br> {{passenger}} {% endfor %}
+					</p>
+					<br>
+			</div>
+			<div class="container">
+
+				<div id="seat-map">
+					<div class="front-indicator">Front</div>
+				</div>
+				<div class="booking-details">
+					<h2>Booking Details</h2>
+					<h3> Selected Seats (<span id="counter">0</span>):</h3>
+					<ul id="selected-seats">
+					</ul>
+					Total: <b>Rs.<span id="total">0</span></b>
+					<button type="submit" onclick="return pcheck()" class="checkout-button">Checkout &raquo;</button>
+					<div id="legend"></div>
+				</div>
+
+			</div>
+		</div>
+	</form>
+
+
+
+
+	<script src="http://code.jquery.com/jquery-1.12.4.min.js"></script>
+	<script src="../static/js/jquery.seat-charts.js"></script>
+	<script>
+		var firstSeatLabel = 1;
+		var selection = [];
+		var c = "";
+		var map = {{layout["map"]|safe}}
+		var seats = {{layout["info"]|safe}}
+		var columns = {{layout["columns"]|safe}}
+		var items = {{layout["legend"]|safe}}
+		console.log(map)
+		console.log(seats)
+		var blocked = {{blocked|safe}}
+		var craft = []
+
+		$(document).ready(function() {
+			var $cart = $('#selected-seats'),
+				$counter = $('#counter'),
+				$total = $('#total'),
+				sc = $('#seat-map').seatCharts({
+					map: map,
+					seats: seats,
+					naming: {
+						top: false,
+						left: false,
+						columns: columns,
+						getLabel: function(character, row, column) {
+							return row + column;
+						},
+					},
+					legend: {
+						node: $('#legend'),
+						items: items
+					},
+					click: function() {
+						if (this.status() == 'available' && sc.find('selected').length < pax) {
+							selection.push(this.settings.id)
+							document.getElementById("seats").value = selection
+							var c = document.getElementById("cost")
+
+							$('<li>' + this.data().category + ' Seat # ' + this.settings.label + ': <b>$' + this.data().price + '</b> <a href="#" class="cancel-cart-item">[cancel]</a></li>')
+								.attr('id', 'cart-item-' + this.settings.id)
+								.data('seatId', this.settings.id)
+								.appendTo($cart);
+
+
+							$counter.text(sc.find('selected').length + 1);
+							$total.text(recalculateTotal(sc) + this.data().price);
+							c.value = document.getElementById('total').innerHTML
+
+							return 'selected';
+
+						} else if (this.status() == 'selected') {
+							$counter.text(sc.find('selected').length - 1);
+							$total.text(recalculateTotal(sc) - this.data().price);
+							$('#cart-item-' + this.settings.id).remove();
+
+							document.getElementById("cost").value = document.getElementById("total").innerHTML
+							for (var i = selection.length - 1; i >= 0; i--) {
+								if (selection[i] === this.settings.id) {
+									selection.splice(i, 1);
+								}
+							}
+							document.getElementById("seats").value = selection;
+
+
+							return 'available';
+						} else if (this.status() == 'unavailable') {
+							return 'unavailable';
+						} else {
+							return this.style();
+						}
+					}
+				});
+
+			$('#selected-seats').on('click', '.cancel-cart-item', function() {
+				sc.get($(this).parents('li:first').data('seatId')).click();
+
+			});
+
+			sc.get(blocked).status('unavailable');
+
+		});
+
+		function recalculateTotal(sc) {
+			var total = 0;
+
+			//basically find every selected seat and sum its price
+			sc.find('selected').each(function() {
+				total += this.data().price;
+			});
+
+			return total;
+		}
+	</script>
+
+</body>
+
+</html>

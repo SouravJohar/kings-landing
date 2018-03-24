@@ -1,0 +1,51 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Flight Information</title>
+  <link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'>
+  <link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'>
+</head>
+<style>
+.container {
+  margin: 0 auto;
+  width: 500px;
+  text-align: left;
+  margin-left: 35%;
+}
+.ticketinfo{
+  margin-left:30%;
+  border-radius:5px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.06), 0 3px 6px rgba(0,0,0, 0.1);
+  padding: 1%;
+  margin-bottom: 5%;
+  background: #e5e6e8;
+}
+
+</style>
+
+<body>
+  <div class="jumbotron jumbotron-fluid">
+  <h2 style="padding:2%"> Your Flight Details </h2>
+</div>
+<div class="container ticketinfo">
+				{% set pnr = payload['pnr'] %}
+         {% set doj = payload['date'] %}
+         {% set passengers = payload['passengers'] %}
+         {% set seat_type = payload['seat_type'] %}
+         {% set flight_no = payload['fnum'] %}
+         {% set from = payload['from'] %}
+         {% set to = payload['to'] %}
+         {% set seats = payload['seats_booked_already'] %}
+
+				<p><strong>PNR</strong> : {{pnr}}</p>
+				<p>From <strong>{{from}}</strong> to <strong>{{to}}</strong> on <strong>{{doj}}</strong>
+					<p><strong>Flight Number</strong>: {{flight_no }} <strong>Seat Type</strong>: {{seat_type}}</p>
+          <p><strong>Seats:</strong> {{seats}} </p>
+					<p>
+						<strong>Passengers</strong>: {% for passenger in passengers %}
+						<br> {{passenger}} {% endfor %}
+					</p>
+					<br>
+			</div>

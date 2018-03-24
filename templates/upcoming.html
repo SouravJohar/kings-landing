@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <title>Upcoming journyes</title>
   <meta charset="utf-8">
@@ -9,121 +10,229 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 </head>
+
+<script>
+function display(n) {
+var modal = document.getElementById('myModal' + n);
+var span = document.getElementsByClassName("close" + n)[0];
+modal.style.display = "block";
+span.onclick = function() {
+    modal.style.display = "none";
+}
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+}
+</script>
+<style>
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #888;
+    width: 80%;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+/* The Close Button */
+.close {
+    color: white;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-header {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+}
+
+.modal-body {padding: 2px 16px;}
+
+.modal-footer {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+}
+</style>
 <body>
 
   <script>
-  function toggle() {
-  $('.pls').click(function(){
-  var id_x = $(this).attr('id');
-  var id = document.getElementById(id_x)
-  var id2 = document.getElementById(id_x.slice(1))
-  console.log(id_x)
-  console.log(id2.id)
-  if (id.innerHTML == "More")
-    id.innerHTML = "Less";
-  else
-    id.innerHTML = "More";
-  if (id2.style.display === 'none')
-    id2.style.display = 'block';
-  else {
-    id2.style.display = 'none';
-  }
+    function toggle() {
+      $('.pls').click(function() {
+        var id_x = $(this).attr('id');
+        var id = document.getElementById(id_x)
+        var id2 = document.getElementById(id_x.slice(1))
+        console.log(id_x)
+        console.log(id2.id)
+        if (id.innerHTML == "More")
+          id.innerHTML = "Less";
+        else
+          id.innerHTML = "More";
+        if (id2.style.display === 'none')
+          id2.style.display = 'block';
+        else {
+          id2.style.display = 'none';
+        }
 
-});
-}
+      });
+    }
   </script>
 
-<div class="container">
-  <br>
-  <div class="jumbotron jumbotron-fluid">
-    <h1 class="display-3" style="padding-left:2%">Upcoming Journeys</h1>
+  <div class="container">
+    <br>
+    <div class="jumbotron jumbotron-fluid">
+      <h1 class="display-3" style="padding-left:2%">Upcoming Journeys</h1>
 
-    <hr class="my-4" style="padding-left:2%">
-    <p class="lead" style="padding-left:2%">You can now select your preferred seats anytime after booking your flight, by checking in below.</p>
+      <hr class="my-4" style="padding-left:2%">
+      <p class="lead" style="padding-left:2%">You can now select your preferred seats anytime after booking your flight, by checking in below.</p>
 
-</div>
-  <br>
-
-
-  {% for journey in journeys %}
-  <br>
-  <br>
-
-  <div class="row">
-    <div class="col-sm-4">
-      <strong>Journey date : </strong>{{journey.date}}
     </div>
-    <div class="col-sm-4">
-      <strong>Number of Passengers: </strong>{{journey.pax}}
-    </div>
-    <div class="col-sm-4">
-      <strong>PNR: </strong>{{journey.pnr}}
-    </div>
-  </div>
-  <div class="card bg-light text-dark" style="border-radius:5px;box-shadow: 0 3px 6px rgba(0,0,0,0.06), 0 3px 6px rgba(0,0,0, 0.1);">
-    <div class="row card-body" style="padding:1%">
-      <div class="col-sm-1">
-      <img src="../static/images/logo2_burned.png" style="height:65px"/>
-    </div>
-    <div class="col-sm-3">
-      <br>
-      <p>{{journey.from}}, JAA
-        <br>
-        <strong> {{journey.from_time}} </strong></p>
-    </div>
-    <div class="col-sm-3">
-      <br>
-      <p>{{journey.journey_time}}</p>
-    </div>
-    <div class="col-sm-3">
-      <br>
-      <p>{{journey.to}}, MAS
-        <br>
-        <strong> {{journey.to_time}} </strong></p>
-    </div>
-    {% if journey.web_checkin_available %}
-    <div class="col-sm-2">
-      <p>Select your seats</p>
-      {% set payload = journey %}
-
-      <a href = "/bookseats{{payload}}" role="button" class="btn btn-success">Web check-in</a>
-    </div>
+    {% if ERR %}
+    <h3>Please try again in a while</h3>
     {% endif %}
-    {% if journey.already_checked_in %}
-    <div class="col-sm-2">
-      <p>Already checked-in!</p>
-      <a href="viewseats/{{payload}}" role="button" class="btn btn-info">View Seats</a>
-    </div>
-    {% endif %}
+    <br> {% for journey in journeys %}
+    <br>
+    <br>
 
-    <a class = "pls" id = "vmore{{journey.no}}" style = "padding-left:2%; color:grey !important" onclick="toggle()">More</a>
-    <div id="more{{journey.no}}" style = "display:none;margin-left:22%">
-      <br>
-      <div class="container">
-      <div class="row">
-        <div class="col-sm-4">
-      <strong>Passengers</strong>
-      {% for passenger in journey.passengers %}
-      <br>
-      {{passenger}}
-      {% endfor %}
-    </div>
+    <div class="row">
       <div class="col-sm-4">
-      <strong>Flight No. : </strong>{{journey.fnum}}
+        <strong>Journey date : </strong>{{journey.date}}
+      </div>
+      <div class="col-sm-4">
+        <strong>Number of Passengers: </strong>{{journey.pax}}
+      </div>
+      <div class="col-sm-4">
+        <strong>PNR: </strong>{{journey.pnr}}
+      </div>
     </div>
-    <div class = "col-sm-4">
-      <strong>Seat type: </strong>{{journey.seat_type}}
+    <div class="card bg-light text-dark" style="border-radius:5px;box-shadow: 0 3px 6px rgba(0,0,0,0.06), 0 3px 6px rgba(0,0,0, 0.1);">
+      <div class="row card-body" style="padding:1%">
+        <div class="col-sm-1">
+          <img src="../static/images/logo2_burned.png" style="height:65px" />
+        </div>
+        <div class="col-sm-3">
+          <br>
+          <p>{{journey.from}}, {{journey.from_code}}
+            <br>
+            <strong> {{journey.from_time}} </strong></p>
+        </div>
+        <div class="col-sm-3">
+          <br>
+          <p>{{journey.journey_time}}</p>
+        </div>
+        <div class="col-sm-3">
+          <br>
+          <p>{{journey.to}}, {{journey.to_code}}
+            <br>
+            <strong> {{journey.to_time}} </strong></p>
+        </div>
+        {% if journey.web_checkin_available %}
+        <div class="col-sm-2">
+          <p>Select your seats</p>
+          {% set payload = journey %}
+
+          <a href="/bookseats{{payload}}" role="button" class="btn btn-success">Web check-in</a>
+        </div>
+        {% endif %}
+        {% if not journey.web_checkin_available %}
+        <div class="col-sm-2">
+          <p>Already checked-in!</p>
+          <a  role="button" onclick="display('{{journey.no}}')" class="btn btn-info">View Seats</a>
+        </div>
+        <div id="myModal{{journey.no}}" class="modal">
+
+
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>View Seats</h2>
+            <span class="close{{journey.no}}">&times;</span>
+          </div>
+          <div class="modal-body">
+            <p>You have chosen these seats:</p>
+            <p>{{journey.seats_booked_already}}</p>
+          </div>
+          <div class="modal-footer">
+      <h3></h3>
     </div>
+        </div>
+
+      </div>
+        {% endif %}
+
+        <a class="pls" id="vmore{{journey.no}}" style="padding-left:2%; color:grey !important" onclick="toggle()">More</a>
+        <div id="more{{journey.no}}" style="display:none;margin-left:22%">
+          <br>
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-4">
+                <strong>Passengers</strong> {% for passenger in journey.passengers %}
+                <br> {{passenger}} {% endfor %}
+              </div>
+              <div class="col-sm-4">
+                <strong>Flight No. : </strong>{{journey.fnum}}
+              </div>
+              <div class="col-sm-4">
+                <strong>Seat type: </strong>{{journey.seat_type}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    {% endfor %}
+    <br>
+    <br>
+    {% if msg %}
+    <strong>{{msg}}</strong> {% endif %}
+
   </div>
-  </div>
-</div>
-    </div>
 
-    </div>
 
-  {% endfor %}
-
-</div>
 
 </body>
+
 </html>
