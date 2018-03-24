@@ -4,9 +4,9 @@ Our software engineering project :/
  
 TODO
  
- * Make payment page
- * Make separate page for stray pnr handling
- * Next module : Seat selection
+ * Make Boarding Pass generator
+ * Make airport-end terminal software
+ * Do a shit ton of testing
  
 
 
