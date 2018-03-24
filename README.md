@@ -4,7 +4,8 @@ Our software engineering project :/
  
 TODO
  
- * Make Boarding Pass generator
+ * Add styling and transition buttons to new pages
+ * figure out calling client side printer from js
  * Make airport-end terminal software
  * Do a shit ton of testing
  
@@ -23,5 +24,7 @@ Usage
   * Flask
   * SQLite3
   * requests
+  * pyqrcode
+  * pypng
    
   
