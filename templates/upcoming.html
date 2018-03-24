@@ -168,10 +168,11 @@ window.onclick = function(event) {
             <br>
             <strong> {{journey.to_time}} </strong></p>
         </div>
+        {% set payload = journey %}
         {% if journey.web_checkin_available %}
         <div class="col-sm-2">
           <p>Select your seats</p>
-          {% set payload = journey %}
+
 
           <a href="/bookseats{{payload}}" role="button" class="btn btn-success">Web check-in</a>
         </div>
@@ -180,6 +181,8 @@ window.onclick = function(event) {
         <div class="col-sm-2">
           <p>Already checked-in!</p>
           <a  role="button" onclick="display('{{journey.no}}')" class="btn btn-info">View Seats</a>
+          <br>
+          <a style="color:gray" href="/viewpass{{payload}}">View Boarding Pass</a>
         </div>
         <div id="myModal{{journey.no}}" class="modal">
 

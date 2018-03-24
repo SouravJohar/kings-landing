@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+  <meta charset="UTF-8">
+  <title>Boarding Pass</title>
+
+
+
+      <link rel="stylesheet" href="../static/css/bpass.css">
+
+
+</head>
+
+<body>
+{% for passengers in journey.passengers  %}
+  <div class="ticket">
+  <header>
+    <div class="company-name">
+      KingsLanding
+    </div>
+
+
+    <div class="gate">
+      <div>
+        Gate
+      </div>
+      <div>
+        B4
+      </div>
+    </div>
+  </header>
+  <header>
+    <div class="company-name">
+      {{passengers}}
+    </div>
+
+
+    <div class="gate">
+      <div>
+        Flight number
+      </div>
+      <div>
+        {{journey.fnum}}
+      </div>
+    </div>
+  </header>
+
+  <section class="airports">
+    <div class="airport">
+      <div class="airport-name">
+        {{journey.from}}<!-- {{source}} -->
+
+      </div>
+      <div class="airport-code">
+        {{journey.from_code}}<!-- {{sourcecode}} -->
+      </div>
+      <div class="dep-arr-label">
+        Departing
+      </div>
+      <div class="time">
+        {{journey.from_time}}
+      </div>
+    </div>
+    <div class="airport">
+      <div class="airport-name">
+        {{journey["to"]}}
+      </div>
+      <div class="airport-code">
+        {{journey["to_code"]}}
+      </div>
+      <div class="dep-arr-label">
+        Arriving
+      </div>
+      <div class="time">
+        {{journey.to_time}}
+        <!-- {{atime}} -->
+      </div>
+    </div>
+  </section>
+  <section class="place">
+    <div class="place-block">
+      <div class="place-label">
+        Date
+      </div>
+      <div class="place-value">
+        {{journey.date}}
+        <!-- {{date}} -->
+      </div>
+    </div>
+    <div class="place-block">
+      <div class="place-label">
+        Seat
+      </div>
+      <div class="place-value">
+        {{dict2[passengers]}}
+        {{journey.seat_type}}
+        <!-- {{seatnumber}} -->
+      </div>
+    </div>
+    <div class="place-block">
+      <div class="place-label">
+        Terminal
+      </div>
+      <div class="place-value">
+        B
+      </div>
+    </div>
+    <div class="qr">
+      <img src="{{dict[passengers]}}" />
+    </div>
+  </section>
+</div>
+<br>
+<br>
+
+{% endfor %}
+</body>
+
+</html>
