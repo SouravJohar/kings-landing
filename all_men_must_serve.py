@@ -5,6 +5,13 @@ import sqlite3 as db
 import requests
 from functools import wraps
 import os
+import ast
+import json
+from database.a320 import a320
+
+
+# TODO
+# boarding pass generator backend and frontend
 
 
 app = Flask(__name__)
@@ -20,7 +27,7 @@ KEY = 'qp9ezhmfH0yRtBmvkJhIPw'
 
 def sendOTP(otp, to, fake=False):
     if not fake:
-        URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=2&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
+        URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=1&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
             KEY, to, "Your OTP from Kings Landing is " + str(otp))
         requests.get(URL)
 
@@ -41,6 +48,7 @@ def login_required(f):
 def logout():
     session.pop('logged_in', None)
     session.pop('user', None)
+    session.clear()
     return redirect(url_for('login'))
 
 
@@ -190,42 +198,62 @@ def profile():
 @app.route("/upcoming")
 @login_required
 def upcoming():
-    journeys = [
-        {
-            "pnr": "PXZ33",
-            "date": "12-02-2019",
-            "pax": 3,
-            "no": 1,
-            "to": "Jaipur",
-            "from": "Trichy",
-            "from_time": "2:20",
-            "to_time": "4:50",
-            "journey_time": "2h 30m",
-            "web_checkin_available": True,
-            "passengers": ["Mr. Raj", "Mr. Sourav Johar", "Mr. Prakash"],
-            "seat_type": "Economy",
-            "fnum":"KL213"
+    c.execute("select travel_id, seats_booked, check_in from travel where traveller = '{}'".format(
+        session['user']))
+    travels = c.fetchall()
+    journeys = []
+    i = 1
+    for travel in travels:
+        journey = {}
+        travel_id, seats_booked, check_in = travel
+        c.execute("select pnr, no_pax, pax_names, no_economy, no_business, no_first, transit_id from journeys where travel_id = {}".format(travel_id))
+        pnr, pax, passengers, no_economy, no_business, no_first, transit_id = c.fetchone()
+        passengers = passengers.split(",")
+        web_checkin_available = False
+        st = ""
+        if str(check_in) == "0":
+            web_checkin_available = True
+        if no_economy > 0:
+            seat_type = "Economy"
+            st = "economy"
+        if no_business > 0:
+            seat_type = "Business"
+            st = "business"
+        if no_first > 0:
+            seat_type = "First Class"
+            st = "fclass"
+        c.execute("select * from airplane_transits where transit_id = {}".format(transit_id))
+        _, date, from_, to, from_code, to_code, journey_time, from_time, to_time, fnum = c.fetchone()
+        journey["pnr"] = pnr
+        journey["date"] = date
+        journey["pax"] = pax
+        journey["no"] = i
+        journey["to"] = to
+        journey["from"] = from_
+        journey["from_code"] = from_code
+        journey["to_code"] = to_code
+        journey["from_time"] = from_time
+        journey["to_time"] = to_time
+        journey["journey_time"] = journey_time
+        journey["web_checkin_available"] = web_checkin_available
+        journey["passengers"] = passengers
+        journey["seat_type"] = seat_type
+        journey["fnum"] = fnum
+        journey["transit_id"] = transit_id
+        journey["st"] = st
+        journey["travel_id"] = travel_id
+        journey["seats_booked_already"] = seats_booked.replace("_", "")
+        i += 1
+        journeys.append(journey)
 
-        },
-        {
-            "pnr": "PXZ09",
-            "date": "13-02-2019",
-            "pax": 3,
-            "no": 2,
-            "to": "Pune",
-            "from": "Trichy",
-            "from_time": "2:20",
-            "to_time": "4:50",
-            "journey_time": "2h 30m",
-            "web_checkin_available": False,
-            "passengers": ["Mr. Raj", "Mr. Sourav Johar", "Mr. Prakash"],
-            "seat_type": "Economy",
-            "fnum":"KL013",
-            "already_checked_in": True
-
-        }
-    ]
-    return render_template("upcoming.html", journeys=journeys)
+    msg = None
+    if len(journeys) == 0:
+        msg = "No upcoming journeys."
+    try:
+        ERR = session["ERR"]
+    except:
+        ERR = False
+    return render_template("upcoming.html", journeys=journeys, msg=msg, ERR=ERR)
 
 
 @app.route('/editprofile', methods=["GET", "POST"])
@@ -264,8 +292,8 @@ def editprofile():
                     flash('No picture attached.')
                     return redirect(request.url)
                 if file:
-                    user = session["user"][:-4] + ".jpg"
-                    filename = secure_filename(session["user"][:-4] + ".jpg")
+                    user = session["user"][: -4] + ".jpg"
+                    filename = secure_filename(session["user"][: -4] + ".jpg")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     aadharid = request.form["aadharid"]
                     c.execute("insert into aadhar values (?, ?, ?)",
@@ -287,12 +315,151 @@ def editprofile():
 
 
 @app.route('/viewaadhar', methods=["GET", "POST"])
+@login_required
 def viewaadhar():
     if request.method == "GET":
         user = session["user"][:-4]
         filename = secure_filename(session["user"][:-4] + ".jpg")
         imgpath = '../static/aadhar/' + filename
         return render_template('viewaadhar.html', imgpath=imgpath)
+
+
+@app.route("/bookseats<data>", methods=["GET", "POST"])
+@login_required
+def book_seats(data):
+    payload = ast.literal_eval(data)
+    with open("database/transits.json", 'r') as fp:
+        transits = json.load(fp)
+    seat_type = payload["st"]
+
+    if request.method == "GET":
+        c.execute("select * from aadhar where email = '{}'".format(session["user"]))
+        query = c.fetchall()
+        if len(query) == 0:
+            flash("Updation of Aadhar card is mandatory to web check-in")
+            return redirect(url_for("editprofile"))
+        blocked = transits[str(payload["transit_id"])][seat_type + "_blocked_seats"]
+        return render_template("bookseats.html", payload=payload, layout=a320[seat_type], blocked=json.dumps(blocked))
+
+    if request.method == 'POST':
+        cost = request.form["cost"]
+        seats_booked = request.form["seats"]
+        seats_booked_list = seats_booked.split(",")
+        ERR = False
+        for seat in seats_booked_list:
+            if seat not in transits[str(payload["transit_id"])][seat_type + "_blocked_seats"]:
+                transits[str(payload["transit_id"])][seat_type + "_blocked_seats"].append(seat)
+            else:
+                ERR = True
+        if not ERR:
+            c.execute("update travel set seats_booked = '{}' where travel_id = {}".format(
+                seats_booked, payload["travel_id"]))
+            c.execute("update travel set check_in = '1' where travel_id = {}".format(
+                payload["travel_id"]))
+            conn.commit()
+            with open("database/transits.json", "w") as f:
+                json.dump(transits, f)
+            session["cost"] = cost
+            session["payload"] = payload
+            session["seats_booked_list"] = seats_booked_list
+            if str(cost) == "0":
+                return redirect(url_for("getpass"))
+            else:
+                return redirect(url_for("payment"))
+        else:
+            session["ERR"] = ERR
+            return redirect(url_for("upcoming"))
+
+
+@app.route("/payment", methods=["GET", "POST"])
+@login_required
+def payment():
+    if request.method == "GET":
+        return render_template("payment.html", cost=session["cost"])
+
+
+@app.route("/rollback")
+@login_required
+def rollback():
+    c.execute("update travel set seats_booked = 'None' where travel_id = {}".format(
+        session["payload"]["travel_id"]))
+    c.execute("update travel set check_in = '0' where travel_id = {}".format(
+        session["payload"]["travel_id"]))
+    st = session["payload"]["st"]
+    with open("database/transits.json", 'r') as fp:
+        transits = json.load(fp)
+    for seat in session["seats_booked_list"]:
+        transits[str(session["payload"]["transit_id"])][st + "_blocked_seats"].remove(seat)
+    with open("database/transits.json", "w") as f:
+        json.dump(transits, f)
+    conn.commit()
+    session.pop('payload', None)
+    session.pop('seats_booked_list', None)
+    session.pop('cost', None)
+    return redirect(url_for("upcoming"))
+
+
+@app.route('/webcheckin', methods=["GET", "POST"])
+@login_required
+def webcheckin():
+    if request.method == "GET":
+        return render_template("webcheckin.html")
+    else:
+        pnr = request.form["pnr"]
+        c.execute("select travel_id from travel where traveller = '{}'".format(session["user"]))
+        valid_ids = [id[0] for id in c.fetchall()]
+        try:
+            c.execute(
+                "select travel_id, no_pax, pax_names, no_economy, no_business, no_first, transit_id from journeys where pnr = '{}'".format(pnr))
+            travel_id, pax, passengers, no_economy, no_business, no_first, transit_id = c.fetchone()
+        except:
+            return render_template("webcheckin.html", msg="Not a valid PNR!")
+        if travel_id not in valid_ids:
+            return render_template("webcheckin.html", msg="Not a valid PNR!")
+        passengers = passengers.split(",")
+        web_checkin_available = False
+        c.execute("select seats_booked, check_in from travel where travel_id = '{}'".format(travel_id))
+        seats_booked, check_in = c.fetchone()
+        st = ""
+        if str(check_in) == "0":
+            web_checkin_available = True
+        if no_economy > 0:
+            seat_type = "Economy"
+            st = "economy"
+        if no_business > 0:
+            seat_type = "Business"
+            st = "business"
+        if no_first > 0:
+            seat_type = "First Class"
+            st = "fclass"
+
+        journey = {}
+        i = 1
+        c.execute("select * from airplane_transits where transit_id = {}".format(transit_id))
+        _, date, from_, to, from_code, to_code, journey_time, from_time, to_time, fnum = c.fetchone()
+        journey["pnr"] = pnr
+        journey["date"] = date
+        journey["pax"] = pax
+        journey["no"] = i
+        journey["to"] = to
+        journey["from"] = from_
+        journey["from_code"] = from_code
+        journey["to_code"] = to_code
+        journey["from_time"] = from_time
+        journey["to_time"] = to_time
+        journey["journey_time"] = journey_time
+        journey["web_checkin_available"] = web_checkin_available
+        journey["passengers"] = passengers
+        journey["seat_type"] = seat_type
+        journey["fnum"] = fnum
+        journey["transit_id"] = transit_id
+        journey["st"] = st
+        journey["travel_id"] = travel_id
+        journey["seats_booked_already"] = seats_booked.replace("_", "")
+        if str(check_in) == '1':
+            return render_template("viewflightdetails.html", payload=journey)
+        else:
+            return redirect("/bookseats" + str(journey))
 
 
 app.run("0.0.0.0")
