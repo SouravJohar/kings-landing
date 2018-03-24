@@ -8,7 +8,7 @@ import os
 import ast
 import json
 from database.a320 import a320
-
+import pyqrcode
 
 # TODO
 # boarding pass generator backend and frontend
@@ -259,6 +259,7 @@ def upcoming():
 @app.route('/editprofile', methods=["GET", "POST"])
 @login_required
 def editprofile():
+    # ph_no=0
     if request.method == "GET":
         c.execute("select * from aadhar where email = '{}'".format(session["user"]))
         aadharquery = c.fetchall()
@@ -292,8 +293,8 @@ def editprofile():
                     flash('No picture attached.')
                     return redirect(request.url)
                 if file:
-                    user = session["user"][: -4] + ".jpg"
-                    filename = secure_filename(session["user"][: -4] + ".jpg")
+                    user = session["user"][:-4] + ".jpg"
+                    filename = secure_filename(session["user"][:-4] + ".jpg")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     aadharid = request.form["aadharid"]
                     c.execute("insert into aadhar values (?, ?, ?)",
@@ -302,6 +303,12 @@ def editprofile():
         User = session["user"]
         name = request.form["name"]
         phone = request.form["phonenumber"]
+        # c.execute("select ph_no from user where email = '{}'".format(User))
+        # ph_no=c.fetchone()
+        # print ph_no
+        # print phone
+        c.execute("select * from user where email = '{}'".format(User))
+        name, email, address, dob, ph_no, state, country = c.fetchone()
         address = request.form["address"]
         dob = request.form["dob"]
         country = request.form["country"]
@@ -309,9 +316,19 @@ def editprofile():
         aadharid = request.form["aadharid"]
         c.execute("update aadhar set aadharid = ? where email = ?", (aadharid, User))
         c.execute("""UPDATE user SET name = ? ,ph_no = ?,address= ?,dob = ? ,state= ?,country= ? WHERE email= ? """,
-                  (name, phone, address, dob, state, country, User))
+                  (name, ph_no, address, dob, state, country, User))
         conn.commit()
-        return redirect(url_for("profile"))
+        print phone
+        print ph_no
+
+        if int(phone) != int(ph_no):
+            session['phone']=phone
+            return redirect(url_for("changephno"))
+        else:
+            print "aaaa"
+
+
+            return redirect(url_for("profile"))
 
 
 @app.route('/viewaadhar', methods=["GET", "POST"])
@@ -369,6 +386,36 @@ def book_seats(data):
         else:
             session["ERR"] = ERR
             return redirect(url_for("upcoming"))
+
+
+@app.route("/changephno", methods=["GET", "POST"])
+@login_required
+
+def changephno():
+    if request.method == "GET":
+        server_otp = int(random() * 10000)
+        session["server_otp"] = server_otp
+
+        user_ph = session['phone']
+        print user_ph
+        sendOTP(to=user_ph, otp=server_otp)
+        return render_template("loginverify.html")
+    else:
+        client_otp = int(request.form["otp"])
+        if client_otp == session["server_otp"]:
+            # c.execute("insert into user values (?, ?, ?, ?, ?, ?, ?)",
+            #           (session["temp"][0], session["temp"][2], "None", "-1", session["temp"][1], "None", "None"))
+            # c.execute("insert into login values (?, ?)", (session["temp"][2], session["temp"][3]))
+            c.execute("""UPDATE user SET ph_no = ? WHERE email= ? """, (session["phone"],session["user"]))
+
+
+            conn.commit()
+            # session["logged_in"] = True
+            # session["user"] = session["temp"][2]
+            # session['temp'] = None
+            return redirect(url_for("profile"))
+        else:
+            return render_template("loginverify.html", msg="Invalid OTP")
 
 
 @app.route("/payment", methods=["GET", "POST"])
@@ -456,10 +503,60 @@ def webcheckin():
         journey["st"] = st
         journey["travel_id"] = travel_id
         journey["seats_booked_already"] = seats_booked.replace("_", "")
+        
         if str(check_in) == '1':
             return render_template("viewflightdetails.html", payload=journey)
         else:
             return redirect("/bookseats" + str(journey))
+@app.route("/getpass", methods=["GET", "POST"])
+# def createqrcode():
+# @lo
+@login_required
+
+def getpass():
+
+    # for i in people:
+    journey=session["payload"]
+    print journey["st"]
+    dict={}
+    dict2={}
+    i=0
+    for name in journey["passengers"]:
+        data=journey["pnr"]+name
+
+        img = pyqrcode.create(data)
+
+
+        img.png("static/qrcodes/"+data+".png", scale=8)
+
+        dict[name]="../static/qrcodes/"+data+".png";
+        dict2[name]=session["seats_booked_list"][i].replace("_", "")
+        i=i+1
+
+
+    return render_template("bpass.html",journey=journey,dict=dict,dict2=dict2)
+
+
+@app.route("/viewpass<data>")
+@login_required
+def view_pass(data):
+    journey = ast.literal_eval(data)
+    dict={}
+    dict2={}
+    i=0
+    for name in journey["passengers"]:
+        data=journey["pnr"]+name
+
+        img = pyqrcode.create(data)
+
+
+        img.png("static/qrcodes/"+data+".png", scale=8)
+
+        dict[name]="../static/qrcodes/"+data+".png";
+        dict2[name]=journey["seats_booked_already"].split(",")[i]
+        i=i+1
+    return render_template("bpass.html",journey=journey,dict=dict,dict2=dict2)
+
 
 
 app.run("0.0.0.0")
