@@ -4,8 +4,6 @@ Our software engineering project :/
  
 TODO
  
- * Add styling and transition buttons to new pages
- * figure out calling client side printer from js
  * Make airport-end terminal software
  * Do a shit ton of testing
  
