@@ -4,15 +4,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Boarding Pass</title>
-
-
-
       <link rel="stylesheet" href="../static/css/bpass.css">
-
-
+      <link rel="stylesheet" href="../static/css/bootstrap.css">
 </head>
 
 <body>
+  <br>
+  <div class="jumbotron">
+  <h1>Your Boarding Passes are ready </h1>
+</div>
+
 {% for passengers in journey.passengers  %}
   <div class="ticket">
   <header>
@@ -115,6 +116,12 @@
 <br>
 
 {% endfor %}
+<br>
+<button type="button" class="btn btn-success" onclick="window.print()">Print / Save</button>
+<button type="button" class="btn btn-default"><a style="color:black"href="/upcoming">Back</button></a>
+<br>
+<br>
+<br>
 </body>
 
 </html>
