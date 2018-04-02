@@ -7,7 +7,9 @@ We are officially in Beta!
 TODO
  
  * Do a shit ton of testing
- 
+
+NOTE
+ * `view_boarding_pass.py` is depracated. Use `valar_morghulis.py` instead.
 
 Usage
 
