@@ -76,7 +76,7 @@ def verifylogin():
         if FAKE:
             server_otp = 1111
         else:
-        server_otp = choice([i for i in range(1000, 10000)])
+            server_otp = choice([i for i in range(1000, 10000)])
         session["server_otp"] = server_otp
         c.execute("select ph_no from user where email = '{}'".format(session["temp_email"]))
         user_ph = c.fetchone()[0]
