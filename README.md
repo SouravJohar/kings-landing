@@ -2,19 +2,25 @@
 Our software engineering project :/
  
  
+We are officially in Beta!
+
 TODO
  
- * Make airport-end terminal software
  * Do a shit ton of testing
  
-
 
 Usage
 
  * Download the repo.
  * Move the `images` folder into the `static` folder
- * Type `python all_men_must_serve.py` in your terminal
- * Website will be served in localhost at port 5000
+ * Setup for Terminal Softare: `python valar_morghulis.py <terminal> <gate>`
+ * `terminal` and `gate` are necessary command line arguments corresponding to the location where the system is deployed.
+ * Setup for main website: `python all_men_must_serve.py <master_ip> <fake>`, on another system.
+ * `master_ip` and `fake` are necessary command line arguments
+ * `master_ip` should be the IP address of the system where the terminal software `valar_morghulis.py` is served.
+   Though you can probaby get away with some garbage value if it is strictly for testing.
+ * `fake` should be 1 if you plan to fake the OTP else 0
+ * The public facing website will be served at the static IP of the server at port 5000
  
  Requirements
  
