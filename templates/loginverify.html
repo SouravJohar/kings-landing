@@ -40,8 +40,14 @@
 								Login
 							</button>
 						</div>
+						<a style = "color:gray%" href = "/otp">Resend OTP</a>
+						<br>
 						{% if msg %}
 			        <p class="error"><strong>Error:</strong> {{ msg }}</p>
+			      {% endif %}
+						<br>
+						{% if alert %}
+			        <p class="error"><strong>Error:</strong> {{ alert }}</p>
 			      {% endif %}
 					</div>
 

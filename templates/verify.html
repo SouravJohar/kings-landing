@@ -27,6 +27,10 @@
 					{% if msg %}
 						<p class="error"><strong>Error:</strong> {{ msg }}</p>
 					{% endif %}
+					<br>
+					{% if alert %}
+						<p class="error"><strong>Error:</strong> {{ alert }}</p>
+					{% endif %}
 
 					<div class="wrap-input100 validate-input" data-validate="Name is required">
 						<span class="label-input100">OTP</span>
@@ -40,6 +44,7 @@
               Verify
             </button>
           </div>
+					<a style = "color:gray" href = "/verify">Resend OTP</a>
 
 				</form>
 			</div>

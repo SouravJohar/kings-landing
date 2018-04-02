@@ -1,21 +1,41 @@
 <html>
-<head>Boarding pass viewer</head>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'>
+<link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'>
+
 <body>
-  <br>
-Name : {{name}}<br> 
+  <div class = "container">
+    <div class = "jumbotron">
+      <h1>Passenger Details</h1>
+<br>
 
-Gate number : 1<br>
+</div>
+<div>
+<h4>Name</h4>{{name}}
 
-Terminal : 1<br>
+<h4>Gate number</h4>  {{gate}}<br>
 
-flight_no : {{flight_no}}<br>
+<h4>Terminal</h4>  {{terminal}}<br>
 
-From :{{from_place}}<br>
+<h4>Flight Number</h4>  {{flight_no}}<br>
 
-To : {{to}} <br>
+<h4>From</h4> {{from_place}}<br>
 
+<h4>To</h4> {{to}} <br>
+</div>
+</div>
 
 
 
 
 <html>
+<script>
+var allowed = {{allowed}}
+if (allowed == 1)
+{
+  swal("Allowed!", "This passenger can board the aircraft.", "success");
+}
+else {
+  swal("Not Allowed!", "This passenger cannot board the aircraft.", "warning");
+}
+</script>
