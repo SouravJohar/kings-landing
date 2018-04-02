@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from werkzeug.utils import secure_filename
-from random import random
+from random import *
 import sqlite3 as db
 import requests
 from functools import wraps
@@ -9,10 +9,11 @@ import ast
 import json
 from database.a320 import a320
 import pyqrcode
+import time
+import sys
 
-# TODO
-# boarding pass generator backend and frontend
-
+MASTER_IP = sys.argv[1]
+FAKE = sys.argv[2]
 
 app = Flask(__name__)
 
@@ -28,7 +29,7 @@ KEY = 'qp9ezhmfH0yRtBmvkJhIPw'
 def sendOTP(otp, to, fake=False):
     if not fake:
         URL = 'https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey={}&senderid=TESTIN&channel=1&DCS=0&flashsms=0&number=91{}&text={}&route=13'.format(
-            KEY, to, "Your OTP from Kings Landing is " + str(otp))
+            KEY, to, "Your OTP from Kings Landing is " + str(otp) + ". This OTP is valid for 2 minutes only.")
         requests.get(URL)
 
 
@@ -69,14 +70,25 @@ def dashboard():
 
 @app.route('/otp', methods=["GET", "POST"])
 def verifylogin():
+    t1 = time.time()
+    print t1
     if request.method == "GET":
-        server_otp = 1111  # int(random() * 10000)
+        if FAKE:
+            server_otp = 1111
+        else:
+        server_otp = choice([i for i in range(1000, 10000)])
         session["server_otp"] = server_otp
         c.execute("select ph_no from user where email = '{}'".format(session["temp_email"]))
         user_ph = c.fetchone()[0]
-        sendOTP(to=user_ph, otp=server_otp, fake=True)
+        if not FAKE:
+            sendOTP(to=user_ph, otp=server_otp, fake=False)
+
         return render_template("loginverify.html", mob=user_ph)
     else:
+        t2 = time.time()
+        print t2
+        if t2 - t1 > 2 * 60:
+            return render_template("loginverify.html", mob=user_ph, alert="This OTP has expired. Please request a new OTP.")
         client_otp = int(request.form["otp"])
         if client_otp == session["server_otp"]:
             session["logged_in"] = True
@@ -117,13 +129,20 @@ def login():
 
 @app.route("/verify", methods=["GET", "POST"])
 def verify():
+    t1 = time.time()
+    print t1
     if request.method == "GET":
-        server_otp = int(random() * 10000)
+        server_otp = choice([i for i in range(1000, 10000)])
         session["server_otp"] = server_otp
         user_ph = session['temp'][1]
-        sendOTP(to=user_ph, otp=server_otp)
+        sendOTP(to=user_ph, otp=server_otp, fake=False)
         return render_template("verify.html", mob=session["temp"][1])
     else:
+        t2 = time.time()
+        print t2
+        print t2 - t1
+        if t2 - t1 > 2 * 60:
+            return render_template("verify.html", mob=session["temp"][1], alert="This OTP has expired. Please request a new OTP.")
         client_otp = int(request.form["otp"])
         if client_otp == session["server_otp"]:
             c.execute("insert into user values (?, ?, ?, ?, ?, ?, ?)",
@@ -319,7 +338,7 @@ def editprofile():
                   (name, ph_no, address, dob, state, country, User))
         conn.commit()
         if int(phone) != int(ph_no):
-            session['phone']=phone
+            session['phone'] = phone
             return redirect(url_for("changephno"))
         else:
             return redirect(url_for("profile"))
@@ -384,7 +403,6 @@ def book_seats(data):
 
 @app.route("/changephno", methods=["GET", "POST"])
 @login_required
-
 def changephno():
     if request.method == "GET":
         server_otp = int(random() * 10000)
@@ -397,7 +415,8 @@ def changephno():
     else:
         client_otp = int(request.form["otp"])
         if client_otp == session["server_otp"]:
-            c.execute("""UPDATE user SET ph_no = ? WHERE email= ? """, (session["phone"],session["user"]))
+            c.execute("""UPDATE user SET ph_no = ? WHERE email= ? """,
+                      (session["phone"], session["user"]))
             conn.commit()
             return redirect(url_for("profile"))
         else:
@@ -489,28 +508,34 @@ def webcheckin():
         journey["st"] = st
         journey["travel_id"] = travel_id
         journey["seats_booked_already"] = seats_booked.replace("_", "")
-        
+
         if str(check_in) == '1':
             return render_template("viewflightdetails.html", payload=journey)
         else:
             return redirect("/bookseats" + str(journey))
-        
-        
+
+
 @app.route("/getpass", methods=["GET", "POST"])
 @login_required
 def getpass():
+    ip = "http://{}:5000/view?".format(MASTER_IP)
     journey = session["payload"]
     dict1 = {}
     dict2 = {}
     i = 0
     for name in journey["passengers"]:
-        data = journey["pnr"] + name
+        cname = name.replace(" ", "_")
+        data = ip + "pnr=" + journey["pnr"] + "&name=" + cname
+        qr_name = journey["pnr"] + "-" + cname
         img = pyqrcode.create(data)
-        img.png("static/qrcodes/" + data + ".png", scale=8)
-        dict1[name] = "../static/qrcodes/" + data + ".png";
+        img.png("static/qrcodes/" + qr_name + ".png", scale=8)
+        dict1[name] = "../static/qrcodes/" + qr_name + ".png"
         dict2[name] = session["seats_booked_list"][i].replace("_", "")
         i = i + 1
-    return render_template("bpass.html", journey=journey, dict=dict1, dict2=dict2)
+    terminal = [1, 2][int(journey["fnum"][2:]) % 2 == 0]
+    gate = ["A1", "B4"][int(journey["fnum"][2:]) % 2 == 0]
+    print terminal, gate
+    return render_template("bpass.html", journey=journey, dict=dict1, dict2=dict2, gate=gate, terminal=terminal)
 
 
 @app.route("/viewpass<data>")
@@ -520,15 +545,20 @@ def view_pass(data):
     dict1 = {}
     dict2 = {}
     i = 0
+    ip = "http://{}:5000/view?".format(MASTER_IP)
+
     for name in journey["passengers"]:
-        data = journey["pnr"] + name
+        cname = name.replace(' ', '_')
+        data = ip + "pnr=" + journey["pnr"] + "&name=" + cname
+        qr_name = journey["pnr"] + "-" + cname
         img = pyqrcode.create(data)
-        img.png("static/qrcodes/" + data + ".png", scale=8)
-        dict1[name] = "../static/qrcodes/" + data + ".png";
+        img.png("static/qrcodes/" + qr_name + ".png", scale=8)
+        dict1[name] = "../static/qrcodes/" + qr_name + ".png"
         dict2[name] = journey["seats_booked_already"].split(",")[i]
         i = i + 1
-    return render_template("bpass.html", journey=journey, dict=dict1, dict2=dict2)
-
+    terminal = [1, 2][int(journey["fnum"][2:]) % 2 == 0]
+    gate = ["A1", "B4"][int(journey["fnum"][2:]) % 2 == 0]
+    return render_template("bpass.html", journey=journey, dict=dict1, dict2=dict2, terminal=terminal, gate=gate)
 
 
 app.run("0.0.0.0")
