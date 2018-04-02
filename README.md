@@ -13,7 +13,7 @@ Usage
 
  * Download the repo.
  * Move the `images` folder into the `static` folder
- * Setup for Terminal Softare: `python valar_morghulis.py <terminal> <gate>`
+ * Setup for Terminal Software: `python valar_morghulis.py <terminal> <gate>`
  * `terminal` and `gate` are necessary command line arguments corresponding to the location where the system is deployed.
  * Setup for main website: `python all_men_must_serve.py <master_ip> <fake>`, on another system.
  * `master_ip` and `fake` are necessary command line arguments
