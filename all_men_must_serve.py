@@ -13,7 +13,7 @@ import time
 import sys
 
 MASTER_IP = sys.argv[1]
-FAKE = sys.argv[2]
+FAKE = int(sys.argv[2])
 
 app = Flask(__name__)
 
